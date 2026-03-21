@@ -1,0 +1,17 @@
+{
+  "name": "agent-tracker-cloudflare-worker",
+  "version": "1.0.0",
+  "description": "One-click deploy Cloudflare Worker for tracking AI agents on any site",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "dependencies": {
+    "@usesapient/agent-tracker": "^0.1.1"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0",
+    "typescript": "^5.0.0"
+  },
+  "license": "MIT"
+}
