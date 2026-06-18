@@ -2,8 +2,9 @@ import { trackRequest } from "@usesapient/agent-tracker/cloudflare";
 
 interface Env {
   SAPIENT_API_KEY: string;
-  ORIGIN_URL: string;
-  RESOLVE_OVERRIDE?: string;
+  ORIGIN_URL: string;     // set to https://app.buildwithfern.com
+  FERN_HOST: string;      // your bare docs domain, e.g. docs.example.com
+  DOCS_SUBPATH?: string;  // optional, e.g. /docs — leave unset to proxy everything
 }
 
 export default {
@@ -41,34 +42,38 @@ export default {
         return new Response("Invalid request URL", { status: 400 });
       }
 
+      // Optional: only handle the docs subpath; 404 everything else.
+      // Skip this if you scope the Worker route to mydomain.com/docs/* instead.
+      const subpath = env?.DOCS_SUBPATH;
+      if (subpath) {
+        const inScope =
+          proxyUrl.pathname === subpath ||
+          proxyUrl.pathname.startsWith(`${subpath}/`);
+        if (!inScope) {
+          return new Response("Not found", { status: 404 });
+        }
+      }
+
+      // Fern routes on x-fern-host, so it must be set to your bare domain.
+      // request.headers is immutable — copy into a mutable Headers object.
+      const fernHost = env?.FERN_HOST || proxyUrl.hostname;
+      const headers = new Headers(request.headers);
+      headers.set("x-fern-host", fernHost);
+
       const proxyInit: RequestInit = {
         method: request.method,
-        headers: request.headers,
+        headers,
       };
       if (request.method !== "GET" && request.method !== "HEAD" && request.body != null) {
         proxyInit.body = request.body;
       }
 
-      const useResolveOverride = env?.RESOLVE_OVERRIDE === "true";
+      // Rewrite to the Fern upstream (app.buildwithfern.com), keep the path.
+      proxyUrl.protocol = origin.protocol;
+      proxyUrl.hostname = origin.hostname;
+      proxyUrl.port = origin.port;
 
-      let proxyRequest: Request;
-
-      if (useResolveOverride) {
-        // Preserve the incoming Host header; DNS resolves to ORIGIN_URL instead.
-        proxyRequest = new Request(request.url, {
-          ...proxyInit,
-          cf: {
-            resolveOverride: origin.hostname,
-          },
-        } as RequestInit);
-      } else {
-        // Original behavior for everyone else
-        proxyUrl.hostname = origin.hostname;
-        proxyUrl.protocol = origin.protocol;
-        proxyUrl.port = origin.port;
-
-        proxyRequest = new Request(proxyUrl.toString(), proxyInit);
-      }
+      const proxyRequest = new Request(proxyUrl.toString(), proxyInit);
 
       return await fetch(proxyRequest);
     } catch (e) {
