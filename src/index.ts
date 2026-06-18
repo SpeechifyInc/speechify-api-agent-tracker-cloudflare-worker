@@ -15,8 +15,8 @@ export default {
         if (env?.SAPIENT_API_KEY && ctx?.waitUntil) {
           trackRequest({ apiKey: env.SAPIENT_API_KEY }, request, ctx.waitUntil.bind(ctx));
         }
-      } catch {
-        // ignore tracking errors
+      } catch (err) {
+        console.error("sapient tracking failed:", err);
       }
 
       const originUrl = env?.ORIGIN_URL;
