@@ -30,10 +30,28 @@ npm run deploy
 
 In Cloudflare Dashboard → Workers → your worker → Settings → Variables:
 
-| Variable | Description |
-|----------|-------------|
-| `SAPIENT_API_KEY` | Your API key from [usesapient.com](https://usesapient.com) |
-| `ORIGIN_URL` | Your actual site URL (e.g., `https://yoursite.framer.website`) |
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `SAPIENT_API_KEY` | Yes | Your API key from [usesapient.com](https://usesapient.com) |
+| `ORIGIN_URL` | Yes | Backend URL to proxy requests to (e.g., `https://yoursite.framer.website`) |
+| `RESOLVE_OVERRIDE` | No | Set to `true` when your origin expects the incoming `Host` header to stay as your public domain. Omit for default proxy behavior. |
+
+**Default proxy** (most sites):
+
+```
+SAPIENT_API_KEY=your-api-key
+ORIGIN_URL=https://yoursite.example.com
+```
+
+**Resolve override** (custom domain in front of a hosted docs or CNAME origin):
+
+```
+SAPIENT_API_KEY=your-api-key
+ORIGIN_URL=https://your-backend-host.example.com
+RESOLVE_OVERRIDE=true
+```
+
+With `RESOLVE_OVERRIDE=true`, the Worker keeps the visitor's URL and `Host` header but connects to the hostname from `ORIGIN_URL`. Use this when your backend validates the public domain rather than its own hostname.
 
 ### 3. Add Worker Route
 

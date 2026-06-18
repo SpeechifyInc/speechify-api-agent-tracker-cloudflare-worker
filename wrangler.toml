@@ -6,3 +6,4 @@ compatibility_date = "2024-01-01"
 # Set these in Cloudflare Dashboard > Workers > Settings > Variables
 # SAPIENT_API_KEY = "your-api-key"
 # ORIGIN_URL = "https://your-actual-site.com"
+# RESOLVE_OVERRIDE = "true"  # optional; preserve Host header and resolve to ORIGIN_URL
